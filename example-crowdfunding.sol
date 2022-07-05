@@ -17,8 +17,18 @@ contract DemoAddress {
         devolicionHabilitada = false;
     }
 
-    function depositar() public payable {
-        require(aportesAbiertos, "La colecta esta cerrada");
+
+    modifier onlyBeneficiario {
+        require(msg.sender==beneficiario,"Solo puede llamarla el beneficiario");
+        _;
+    }
+
+    modifier onlyColectaAbierta {
+        require(aportesAbiertos,"La colecta esta cerrada");
+        _;
+    }
+
+    function depositar() public payable onlyColectaAbierta {
         saldo = saldo + msg.value;
         aportes[msg.sender] = aportes[msg.sender] + msg.value;
     }
@@ -32,9 +42,7 @@ contract DemoAddress {
     }
 
     // Solo puede cerrar la colecta el beneficiario
-    function cerrarAportes() public {
-        require(msg.sender == beneficiario, "Solo puede llamar el beneficiario");
-        require(aportesAbiertos, "La colecta esta cerrada");
+    function cerrarAportes() public onlyBeneficiario onlyColectaAbierta {
         aportesAbiertos = false;
         if(saldo >= metaEsperada){
             payable(beneficiario).transfer(saldo);
